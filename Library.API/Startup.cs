@@ -18,7 +18,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-
 namespace Library.API
 {
     public class Startup
@@ -42,7 +41,7 @@ namespace Library.API
                     new ProducesResponseTypeAttribute(StatusCodes.Status406NotAcceptable));
                 setupAction.Filters.Add(
                     new ProducesResponseTypeAttribute(StatusCodes.Status500InternalServerError));
-                
+
                 var jsonOutputFormatter = setupAction.OutputFormatters
                     .OfType<JsonOutputFormatter>().FirstOrDefault();
 
@@ -53,33 +52,32 @@ namespace Library.API
                     if (jsonOutputFormatter.SupportedMediaTypes.Contains("text/json"))
                     {
                         jsonOutputFormatter.SupportedMediaTypes.Remove("text/json");
-                    }           
+                    }
                 }
 
                 setupAction.OutputFormatters.Add(new XmlSerializerOutputFormatter());
-
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddVersionedApiExplorer(setupAction =>
-            { 
+            {
                 setupAction.GroupNameFormat = "'v'VV";
                 setupAction.SubstituteApiVersionInUrl = true;
-            }); 
+            });
 
             services.AddApiVersioning(setupAction =>
                 {
                     setupAction.AssumeDefaultVersionWhenUnspecified = true;
                     setupAction.DefaultApiVersion = new ApiVersion(1, 0);
-                    setupAction.ReportApiVersions = true; 
-                });             
+                    setupAction.ReportApiVersions = true;
+                });
 
             // register the DbContext on the container, getting the connection string from
             // appSettings (note: use this during development; in a production environment,
             // it's better to store the connection string in an environment variable)
             var connectionString = Configuration["ConnectionStrings:LibraryDBConnectionString"];
             services.AddDbContext<LibraryContext>(o => o.UseSqlServer(connectionString));
-            
+
             services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = actionContext =>
@@ -104,16 +102,16 @@ namespace Library.API
             services.AddScoped<IBookRepository, BookRepository>();
             services.AddScoped<IAuthorRepository, AuthorRepository>();
 
-            services.AddAutoMapper();  
+            services.AddAutoMapper();
 
             var apiVersionDescriptionProvider =
                 services.BuildServiceProvider().GetService<IApiVersionDescriptionProvider>();
 
             services.AddSwaggerGen(setupAction =>
-            { 
+            {
                 setupAction.OperationFilter<GetBookOperationFilter>();
-                setupAction.OperationFilter<CreateBookOperationFilter>();                
-               
+                setupAction.OperationFilter<CreateBookOperationFilter>();
+
                 foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
                 {
                     setupAction.SwaggerDoc($"LibraryOpenAPISpecification{description.GroupName}",
@@ -134,13 +132,12 @@ namespace Library.API
                                 Url = new Uri("https://opensource.org/licenses/MIT")
                             }
                         });
-
                 }
 
                 setupAction.DocInclusionPredicate((documentName, apiDescription) =>
-                { 
+                {
                     var actionApiVersionModel = apiDescription.ActionDescriptor
-                    .GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit); 
+                    .GetApiVersionModel(ApiVersionMapping.Explicit | ApiVersionMapping.Implicit);
 
                     if (actionApiVersionModel == null)
                     {
@@ -149,17 +146,17 @@ namespace Library.API
 
                     if (actionApiVersionModel.DeclaredApiVersions.Any())
                     {
-                        return actionApiVersionModel.DeclaredApiVersions.Any(v => 
+                        return actionApiVersionModel.DeclaredApiVersions.Any(v =>
                         $"LibraryOpenAPISpecificationv{v.ToString()}" == documentName);
                     }
-                    return actionApiVersionModel.ImplementedApiVersions.Any(v => 
+                    return actionApiVersionModel.ImplementedApiVersions.Any(v =>
                         $"LibraryOpenAPISpecificationv{v.ToString()}" == documentName);
                 });
 
                 var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
- 
-                setupAction.IncludeXmlComments(xmlCommentsFullPath);             
+
+                setupAction.IncludeXmlComments(xmlCommentsFullPath);
             });
         }
 
@@ -170,7 +167,7 @@ namespace Library.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }           
+            }
 
             app.UseSwagger();
 
@@ -185,10 +182,10 @@ namespace Library.API
 
                 setupAction.RoutePrefix = "";
             });
-            
+
             app.UseStaticFiles();
 
             app.UseMvc();
-        } 
+        }
     }
 }
